@@ -1,0 +1,39 @@
+LinearLearn is a cinematic, interactive web application that teaches Linear Regression to complete beginners — specifically engineering students who have zero machine learning background. The goal is simple: after using this app, a student should be able to perform linear regression with a pen and paper.
+
+What It Is
+Not a dashboard. Not a tutorial. A guided story that a person walks through, where every concept is felt before it is explained, and every formula is understood before it is memorized. The experience is closer to an interactive documentary than a tool.
+
+The Tech
+Single React JSX file. No build step. Recharts for all charts. PapaParse via CDN for CSV parsing. All math implemented in pure JavaScript from scratch — no ML libraries — because students need to see the math, not a black box. Anthropic API for scoped AI help. CSS variables for the design system. Dark theme throughout.
+
+The Design
+Dark, cinematic UI. Near-black background #0A0A0F, indigo primary #6366F1, amber accent #F59E0B. Clean typography, generous spacing, smooth animations. Everything appears with purpose — lines draw themselves, numbers count up, dots animate into place. No clutter. One idea per screen.
+
+The Structure
+8 Acts, 24 screens total, navigated via a sidebar that stays accessible throughout. Completed acts can always be revisited. Progress never locks the user out.
+Act 0 — Landing: Animated dots form a scatter plot. A line draws itself. "This is Linear Regression. In 20 minutes you'll understand exactly how." One button: Begin.
+Act 1 — Big Picture: Before any data or math, the user sees 5 dots representing houses and guesses the price of a 6th house. That guess is saved. It pays off dramatically in Act 6. The concept of pattern-finding is introduced through pure intuition, no jargon.
+Act 2 — Your Data: User uploads a CSV or uses the bundled house price dataset. Data is shown as animated physical cards, not a table. User picks which column to predict (the target) and which columns are clues (features). Friendly validation handles bad uploads.
+Act 3 — Reading Clues: EDA, but narrated like discovery. One feature at a time — histogram, plain English narration, then scatter plot against the target where the user draws what they think the trend is before the actual correlation line is revealed. Correlation shown as "pull meters" — magnet strength bars — not a confusing matrix.
+Act 4 — The Math: This is the heart of the app. Five screens. First: a draggable line on the scatter plot where the user physically sees b₀ and b₁ labeled and explained in plain English. Then the Slider Playground — the crown jewel — where the user manually adjusts two sliders to move the regression line, watching error arrows on every data point and the MSE counter update in real time. After struggling manually, one button says "Let the computer take over" and the sliders animate to the optimal values automatically. That moment IS the explanation of gradient descent. Then MSE is built formula piece by piece. Then the Pen and Paper screen — a notebook-style panel where one row from the actual dataset is calculated step by step, line by line, with the user's real model coefficients, printable. Then gradient descent visualized as a ball rolling down a 2D parabola with a learning rate slider showing overshoot versus slow convergence.
+Act 5 — Training: Data rows shown as colored rectangles. A slider controls train/test ratio — rectangles flip face-down as the test set. Training animation: the line moves to its best position while error drops and an iteration counter runs. The result is a Model Card showing the full formula with plain English meaning for each coefficient.
+Act 6 — Prediction: User inputs values for a new house. The prediction is computed step by step on screen, matching exactly what the pen and paper section showed. Then the actual price reveals. Then — the emotional peak — the user's original guess from Act 1 appears alongside the model's prediction and the actual value. Three numbers. The growth is visible.
+Act 7 — Report Card: Metrics in plain English. R² described as "your model captured X% of the pattern." K-Fold cross validation visualized as 5 horizontal bars, each representing a different train/test split, with consistent results meaning the model genuinely learned. Predicted vs Actual scatter plot where a perfect model means all dots on the diagonal line.
+Act 8 — Transformation: The original 5 dots from Act 1 reappear. Concept labels fade in over them — everything the user now understands. A checklist of what they learned builds on screen. Then a downloadable PDF cheatsheet generated with their actual model's coefficients, a worked example from their data, and the glossary they built — so they can do this with a pen and paper tomorrow.
+
+The Doubt System
+Every single screen has five layers of help:
+Say it differently — three pre-written modes per screen: Simple (one sentence, plain English), Story (analogy and context), Math (formula and notation). User switches instantly, no API call.
+So what? — a collapsible panel on every screen answering "why does this step exist?" Pre-written, always available.
+Ask — a scoped AI chat that opens with the current screen's context already loaded. The system prompt tells the model exactly what concept is being taught, what the user's data looks like, and what their model is. Answers are capped at 3 sentences. Cannot be used to do homework.
+Glossary — builds in the sidebar as the user progresses. Each term defined in the plain English they encountered it in, not textbook language.
+Catch me up — one button in the sidebar that calls the API with all completed acts and returns a 60-word summary of everything covered so far.
+Checkpoint — one multiple choice question at the end of each act. Wrong answer replays the relevant screen. Right answer advances with positive reinforcement.
+
+The Math (All Pure JS)
+Mean, standard deviation, min, max, Pearson correlation, Normal Equation for closed-form solution, Gradient Descent for visualization, MSE, MAE, R², K-Fold cross validation, min-max normalization, z-score standardization, label encoding, one-hot encoding, train/test split with shuffle.
+No sklearn. No tensorflow. Every calculation visible and traceable back to the formula shown on screen.
+
+The Differentiator
+Every other student in this class will build a form that calls a model and shows a chart. This app makes the user feel confused first, then curious, then capable. The slider playground makes them feel the pain of manual optimization before the relief of automation. The pen and paper section means they leave with a skill, not just a memory. The initial guess payoff in Act 6 gives them a measurable before-and-after. The downloadable cheatsheet means the learning continues after the screen closes.
+The product is not impressive because of its features. It is impressive because of what the user feels when they finish it.
