@@ -340,6 +340,31 @@ export default function Act4TheMath() {
 
             <WorksheetEngine dataset={dataset} feature={feature} target={target} onScore={(score) => setWorksheetScore(4, score)} />
 
+            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+              <div>
+                <h4 className="text-lg font-medium">Code Mirror</h4>
+                <p className="text-sm text-muted-foreground">This is how the same hand-calculation idea looks when you implement it in Python.</p>
+              </div>
+              <pre className="overflow-x-auto rounded-lg bg-muted/20 p-4 text-xs md:text-sm font-mono leading-6">
+{`import pandas as pd
+
+df = pd.read_csv("houses.csv")
+X = df[["${feature}"]]
+y = df["${target}"]
+
+x_bar = X["${feature}"].mean()
+y_bar = y.mean()
+
+numerator = ((X["${feature}"] - x_bar) * (y - y_bar)).sum()
+denominator = ((X["${feature}"] - x_bar) ** 2).sum()
+
+b1 = numerator / denominator
+b0 = y_bar - b1 * x_bar
+
+prediction = b0 + b1 * new_${feature}`}
+              </pre>
+            </div>
+
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <CheckpointQuiz
                 actNumber={4}
