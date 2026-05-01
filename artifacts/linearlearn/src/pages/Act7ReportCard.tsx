@@ -65,7 +65,7 @@ export default function Act7ReportCard() {
         </p>
       </motion.div>
 
-      <div className="flex gap-2 border-b border-border pb-4 mb-4">
+      <div className="flex flex-wrap gap-2 border-b border-border pb-4 mb-4">
         <Button variant={step === 1 ? "default" : "outline"} onClick={() => setStep(1)}>1. The Metrics</Button>
         <Button variant={step === 2 ? "default" : "outline"} onClick={() => setStep(2)}>2. Stress Test</Button>
         <Button variant={step === 3 ? "default" : "outline"} onClick={() => setStep(3)}>3. Reality Check</Button>
@@ -74,7 +74,7 @@ export default function Act7ReportCard() {
       <AnimatePresence mode="wait">
         {step === 1 && (
           <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               <MetricCard title="Pattern Captured" value={`${(r2 * 100).toFixed(1)}%`} subtitle="R2 Score" accent="primary">
                 Your model explains {(r2 * 100).toFixed(1)}% of why {target} changes.
               </MetricCard>
@@ -98,7 +98,7 @@ export default function Act7ReportCard() {
               Change K to control how many times we rotate the test slice. This helps us check whether the model is stable across different splits.
             </p>
 
-            <div className="bg-card border border-border p-8 rounded-xl shadow-lg space-y-8">
+            <div className="bg-card border border-border p-6 md:p-8 rounded-xl shadow-lg space-y-8">
               <div className="space-y-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Number of folds</span>
@@ -153,7 +153,7 @@ export default function Act7ReportCard() {
               If the model were perfect, every dot would sit exactly on the diagonal line. The closer the cloud is to that line, the better the model is behaving.
             </p>
 
-            <div className="h-[500px] bg-card border border-border p-4 rounded-xl shadow-lg">
+            <div className="h-[360px] md:h-[440px] xl:h-[500px] bg-card border border-border p-4 rounded-xl shadow-lg">
               <ResponsiveContainer width="100%" height="100%">
                 <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />

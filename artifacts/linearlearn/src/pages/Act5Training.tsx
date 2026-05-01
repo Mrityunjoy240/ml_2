@@ -93,7 +93,7 @@ export default function Act5Training() {
         </p>
       </motion.div>
 
-      <div className="flex gap-2 border-b border-border pb-4 mb-4">
+      <div className="flex flex-wrap gap-2 border-b border-border pb-4 mb-4">
         <Button variant={step === 1 ? "default" : "outline"} onClick={() => setStep(1)}>1. The Split</Button>
         <Button variant={step === 2 ? "default" : "outline"} onClick={() => setStep(2)}>2. The Training</Button>
       </div>
@@ -107,7 +107,7 @@ export default function Act5Training() {
               We split the data. The blue squares are for learning. The amber squares are hidden for the final test.
             </p>
 
-            <div className="bg-card border border-border p-8 rounded-xl shadow-lg space-y-8">
+            <div className="bg-card border border-border p-6 md:p-8 rounded-xl shadow-lg space-y-8">
               <div className="flex justify-between items-center">
                 <span className="font-mono text-primary">{Math.round(splitRatio * 100)}% Train</span>
                 <span className="font-mono text-accent">{Math.round((1 - splitRatio) * 100)}% Test</span>
@@ -127,7 +127,7 @@ export default function Act5Training() {
                 })}
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+              <div className="grid gap-4 md:grid-cols-2 text-sm text-muted-foreground">
                 <div className="border border-border rounded-lg p-4">Train rows: {trainData.length}</div>
                 <div className="border border-border rounded-lg p-4">Test rows: {testData.length}</div>
               </div>
@@ -147,9 +147,9 @@ export default function Act5Training() {
               The loss curve shows the model settling into a lower-error solution over time.
             </p>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-card border border-border rounded-xl p-8 flex flex-col justify-center items-center space-y-6">
-                <Button size="lg" onClick={handleTrain} disabled={isTraining || trained}>
+            <div className="grid gap-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:items-stretch">
+              <div className="bg-card border border-border rounded-xl p-6 md:p-8 flex min-h-[320px] flex-col justify-center items-center text-center space-y-6">
+                <Button size="lg" className="w-full md:w-auto" onClick={handleTrain} disabled={isTraining || trained}>
                   {isTraining ? "Training..." : trained ? "Training Complete" : "Start Training"}
                 </Button>
 
@@ -171,7 +171,7 @@ export default function Act5Training() {
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="bg-card border border-primary/50 rounded-xl p-8 relative overflow-hidden"
+                    className="bg-card border border-primary/50 rounded-xl p-6 md:p-8 relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-bl-lg">
                       Model Ready

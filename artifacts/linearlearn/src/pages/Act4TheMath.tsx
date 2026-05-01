@@ -108,7 +108,7 @@ export default function Act4TheMath() {
         </p>
       </motion.div>
 
-      <div className="flex gap-2 border-b border-border pb-4 mb-4 flex-wrap">
+      <div className="flex flex-wrap gap-2 border-b border-border pb-4 mb-4">
         <Button variant={step === 1 ? "default" : "outline"} onClick={() => setStep(1)}>1. The Equation</Button>
         <Button variant={step === 2 ? "default" : "outline"} onClick={() => setStep(2)}>2. The Error</Button>
         <Button variant={step === 3 ? "default" : "outline"} onClick={() => setStep(3)}>3. Gradient Descent</Button>
@@ -118,9 +118,9 @@ export default function Act4TheMath() {
 
       <AnimatePresence mode="wait">
         {(step === 1 || step === 2 || step === 3) && (
-          <motion.div key="chart-section" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid md:grid-cols-2 gap-8">
+          <motion.div key="chart-section" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] xl:items-start">
             <div className="space-y-6">
-              <div className="h-[400px] bg-card border border-border p-4 rounded-xl shadow-lg relative">
+              <div className="h-[360px] md:h-[420px] bg-card border border-border p-4 rounded-xl shadow-lg relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -153,7 +153,7 @@ export default function Act4TheMath() {
               </div>
 
               {step >= 2 && (
-                <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center">
+                <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center text-center">
                   <div className="text-sm text-muted-foreground uppercase tracking-widest mb-2">Total Error (MSE)</div>
                   <motion.div
                     key={currentMse}
@@ -193,7 +193,7 @@ export default function Act4TheMath() {
                       <Slider value={[b1]} min={-500} max={500} step={1} onValueChange={(v) => setB1(v[0])} />
                     </div>
                   </div>
-                  <Button className="w-full mt-4" onClick={() => setStep(2)}>Next: Measuring Error</Button>
+                  <Button className="w-full mt-4 md:w-auto" onClick={() => setStep(2)}>Next: Measuring Error</Button>
                 </div>
               )}
 
@@ -224,7 +224,7 @@ export default function Act4TheMath() {
                       <Slider value={[b1]} min={-500} max={500} step={1} onValueChange={(v) => setB1(v[0])} />
                     </div>
                   </div>
-                  <Button className="w-full mt-4" onClick={() => setStep(3)}>Next: Let the computer do it</Button>
+                  <Button className="w-full mt-4 md:w-auto" onClick={() => setStep(3)}>Next: Let the computer do it</Button>
                 </div>
               )}
 
@@ -240,7 +240,7 @@ export default function Act4TheMath() {
                       <span className="text-muted-foreground">Iteration</span>
                       <span className="font-mono">{gdStep}</span>
                     </div>
-                    <Button size="lg" className="w-full" onClick={handleOptimize} disabled={isOptimizing}>
+                    <Button size="lg" className="w-full md:w-auto" onClick={handleOptimize} disabled={isOptimizing}>
                       {isOptimizing ? "Optimizing..." : "Run Gradient Descent"}
                     </Button>
                   </div>
@@ -259,7 +259,7 @@ export default function Act4TheMath() {
                   )}
 
                   {!isOptimizing && gdHistory.length > 0 && (
-                    <Button className="w-full" onClick={() => setStep(4)}>Next: The Exact Answer</Button>
+                    <Button className="w-full md:w-auto" onClick={() => setStep(4)}>Next: The Exact Answer</Button>
                   )}
                 </div>
               )}
@@ -268,13 +268,13 @@ export default function Act4TheMath() {
         )}
 
         {step === 4 && (
-          <motion.div key="step4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto space-y-8">
+          <motion.div key="step4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto w-full max-w-4xl space-y-8">
             <h3 className="text-3xl font-serif font-medium text-center">The Normal Equation</h3>
             <p className="text-center text-muted-foreground text-lg">
               For small datasets, we do not even need to step downhill. We can jump straight to the bottom using an exact formula.
             </p>
 
-            <div className="bg-card border border-border rounded-xl p-8 space-y-8">
+            <div className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-8">
               <div className="text-center space-y-4">
                 <h4 className="text-sm uppercase tracking-widest text-primary font-medium">The Multiplier (Slope)</h4>
                 <div className="font-mono text-2xl bg-muted/30 p-4 rounded-lg inline-block border border-border">
@@ -306,7 +306,7 @@ export default function Act4TheMath() {
             <h3 className="text-3xl font-serif font-medium">Pen & Paper Walkthrough</h3>
             <p className="text-muted-foreground">Here is the exact calculation using the first 3 rows of your data.</p>
 
-            <div className="bg-card border border-border rounded-xl p-8 font-mono text-sm leading-relaxed space-y-6 overflow-x-auto">
+            <div className="bg-card border border-border rounded-xl p-5 md:p-8 font-mono text-sm leading-relaxed space-y-6 overflow-x-auto">
               <div>
                 <div className="text-primary mb-2">// 1. The Data (First 3 rows)</div>
                 {dataset.slice(0, 3).map((r, i) => (

@@ -145,11 +145,11 @@ export default function Act2YourData() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="grid md:grid-cols-3 gap-8"
+            className="grid gap-6 lg:grid-cols-3"
           >
             {/* Upload Zone */}
             <div 
-              className="border-2 border-dashed border-border rounded-xl p-12 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors cursor-pointer bg-card/50"
+              className="border-2 border-dashed border-border rounded-xl p-8 md:p-10 flex min-h-[280px] flex-col items-center justify-center text-center hover:border-primary/50 transition-colors cursor-pointer bg-card/50"
               onClick={() => fileInputRef.current?.click()}
               data-testid="dropzone"
             >
@@ -169,7 +169,7 @@ export default function Act2YourData() {
             </div>
 
             {/* Sample Dataset */}
-            <div className="border border-border rounded-xl p-12 flex flex-col items-center justify-center text-center bg-card/50">
+            <div className="border border-border rounded-xl p-8 md:p-10 flex min-h-[280px] flex-col items-center justify-center text-center bg-card/50">
               <FileType2 className="w-12 h-12 text-primary mb-4" />
               <h3 className="text-xl font-medium mb-2">Use Sample Data</h3>
               <p className="text-muted-foreground mb-6">King County House Prices</p>
@@ -178,7 +178,7 @@ export default function Act2YourData() {
               </Button>
             </div>
 
-            <div className="border border-border rounded-xl p-12 flex flex-col items-center justify-center text-center bg-card/50">
+            <div className="border border-border rounded-xl p-8 md:p-10 flex min-h-[280px] flex-col items-center justify-center text-center bg-card/50">
               <FileType2 className="w-12 h-12 text-accent mb-4" />
               <h3 className="text-xl font-medium mb-2">Messy Data Lab</h3>
               <p className="text-muted-foreground mb-6">Nulls, categories, and uneven columns</p>
@@ -200,7 +200,7 @@ export default function Act2YourData() {
             <div className="bg-card border border-border p-8 rounded-xl shadow-lg">
               <h3 className="text-2xl font-medium mb-6">Define the Roles</h3>
               
-              <div className="grid md:grid-cols-2 gap-12">
+              <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
                 <div className="space-y-4">
                   <div>
                     <h4 className="text-lg font-medium flex items-center gap-2 mb-2">
@@ -274,7 +274,7 @@ export default function Act2YourData() {
                     ))}
                   </div>
                 )}
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   <div className="border border-border rounded-lg p-4 bg-muted/20">
                     <div className="text-xs uppercase tracking-wider text-muted-foreground">Shape</div>
                     <div className="mt-1 font-mono text-lg">{dataset.length} x {columns.length}</div>
@@ -288,7 +288,7 @@ export default function Act2YourData() {
                     <div className="mt-1 text-sm">{missingStrategy} / {encodingStrategy} / {scalingStrategy}</div>
                   </div>
                 </div>
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid gap-4 lg:grid-cols-3">
                   <Select value={missingStrategy} onValueChange={(v) => setMissingStrategy(v as MissingStrategy)}>
                     <SelectTrigger><SelectValue placeholder="Missing values" /></SelectTrigger>
                     <SelectContent>
@@ -388,7 +388,7 @@ export default function Act2YourData() {
                   </table>
                 </div>
                 <Tabs defaultValue="tables" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid h-auto w-full grid-cols-1 gap-2 sm:grid-cols-2">
                     <TabsTrigger value="tables">Before / After</TabsTrigger>
                     <TabsTrigger value="code">Code Mirror</TabsTrigger>
                   </TabsList>
@@ -420,7 +420,7 @@ export default function Act2YourData() {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-12"
           >
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }} 
                 animate={{ scale: 1, opacity: 1 }} 

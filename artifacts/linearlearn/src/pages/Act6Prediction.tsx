@@ -42,13 +42,13 @@ export default function Act6Prediction() {
         </p>
       </motion.div>
 
-      <div className="bg-card border border-border p-8 rounded-xl shadow-lg">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+      <div className="bg-card border border-border p-6 md:p-8 rounded-xl shadow-lg">
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:items-start">
           <div className="space-y-6">
             <h3 className="text-2xl font-medium mb-2">Enter a new sample</h3>
             <div className="space-y-3">
               {features.map((col) => (
-                <div key={col} className="flex items-center gap-4">
+                <div key={col} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                   <Input
                     type="number"
                     value={inputValues[col] ?? Number(firstSample[col]) ?? ""}
@@ -56,9 +56,9 @@ export default function Act6Prediction() {
                       setInputValues((prev) => ({ ...prev, [col]: Number(e.target.value) }))
                     }
                     disabled={hasPredicted}
-                    className="h-12 text-xl font-mono"
+                    className="h-12 text-lg md:text-xl font-mono"
                   />
-                  <span className="text-muted-foreground font-medium min-w-24">{col}</span>
+                  <span className="text-muted-foreground font-medium sm:min-w-24">{col}</span>
                 </div>
               ))}
             </div>
@@ -67,7 +67,7 @@ export default function Act6Prediction() {
             </Button>
           </div>
 
-          <div className="bg-muted/20 p-6 rounded-lg border border-border font-mono space-y-4 relative">
+          <div className="bg-muted/20 p-6 rounded-lg border border-border font-mono space-y-4 relative overflow-hidden">
             <div className="text-sm text-muted-foreground mb-4">Calculation</div>
             <div className="flex justify-between items-center text-lg">
               <span>Intercept (b0)</span>
@@ -98,7 +98,7 @@ export default function Act6Prediction() {
           >
             <h3 className="text-3xl font-serif text-center mb-8">The Reveal</h3>
 
-            <div className="grid md:grid-cols-3 gap-6 text-center">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 text-center">
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -148,7 +148,7 @@ export default function Act6Prediction() {
               transition={{ delay: 5 }}
               className="flex justify-center"
             >
-              <div className="flex items-center gap-3 bg-muted/50 border border-border px-6 py-4 rounded-full text-lg">
+              <div className="flex flex-col items-center gap-3 text-center bg-muted/50 border border-border px-6 py-4 rounded-3xl sm:flex-row sm:text-left text-lg">
                 <Trophy className={`w-6 h-6 ${modelWon ? "text-primary" : "text-accent"}`} />
                 <span>{modelWon ? "The model used the pattern more effectively than the original guess." : "Your intuition was closer on this example."}</span>
               </div>
