@@ -10,6 +10,7 @@ import { UploadCloud, FileType2, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { mae, normalEquation, predictRow, rSquared } from "@/lib/math";
 import {
   applyEncoding,
   applyMissingValueHandling,
@@ -100,6 +101,7 @@ export default function Act2YourData() {
     encodingStrategy,
     scalingStrategy,
   );
+  const comparison = compareModelReadiness(activeRawDataset, dataset, featureColumns, targetColumn);
 
   const applyPreprocessing = () => {
     let next = [...activeRawDataset];
@@ -339,6 +341,30 @@ export default function Act2YourData() {
                         <div key={item} className="text-muted-foreground">{item}</div>
                       ))}
                     </div>
+                  </div>
+                </div>
+                <div className="border border-border rounded-lg p-5 space-y-4 bg-muted/10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium">Before vs After Modeling</div>
+                      <div className="text-xs text-muted-foreground">See whether your current preprocessing choices improve model readiness.</div>
+                    </div>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <ModelCompareCard
+                      title="Before preprocessing"
+                      rowsUsed={comparison.before.rowsUsed}
+                      r2={comparison.before.r2}
+                      maeValue={comparison.before.mae}
+                      note={comparison.before.note}
+                    />
+                    <ModelCompareCard
+                      title="After preprocessing"
+                      rowsUsed={comparison.after.rowsUsed}
+                      r2={comparison.after.r2}
+                      maeValue={comparison.after.mae}
+                      note={comparison.after.note}
+                    />
                   </div>
                 </div>
                 <div className="overflow-x-auto border border-border rounded-lg">
@@ -584,6 +610,69 @@ function DataPreviewTable({ title, data, columns }: { title: string; data: any[]
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function compareModelReadiness(
+  rawData: any[],
+  processedData: any[],
+  featureColumns: string[],
+  targetColumn: string,
+) {
+  return {
+    before: evaluateDataset(rawData, featureColumns, targetColumn),
+    after: evaluateDataset(processedData, featureColumns, targetColumn),
+  };
+}
+
+function evaluateDataset(data: any[], featureColumns: string[], targetColumn: string) {
+  if (!data.length || !targetColumn || featureColumns.length === 0) {
+    return { rowsUsed: 0, r2: null as number | null, mae: null as number | null, note: "Select a target and at least one feature to evaluate." };
+  }
+
+  const filtered = data.filter((row) =>
+    featureColumns.every((col) => Number.isFinite(Number(row[col]))) &&
+    Number.isFinite(Number(row[targetColumn])),
+  );
+
+  if (filtered.length < 3) {
+    return { rowsUsed: filtered.length, r2: null as number | null, mae: null as number | null, note: "Not enough numeric rows are usable for a stable regression fit." };
+  }
+
+  const X = filtered.map((row) => featureColumns.map((col) => Number(row[col])));
+  const y = filtered.map((row) => Number(row[targetColumn]));
+  const coeffs = normalEquation(X, y);
+  const preds = X.map((row) => predictRow(coeffs, row));
+
+  return {
+    rowsUsed: filtered.length,
+    r2: rSquared(y, preds),
+    mae: mae(y, preds),
+    note: "A simple fit on the currently usable rows.",
+  };
+}
+
+function ModelCompareCard({
+  title,
+  rowsUsed,
+  r2,
+  maeValue,
+  note,
+}: {
+  title: string;
+  rowsUsed: number;
+  r2: number | null;
+  maeValue: number | null;
+  note: string;
+}) {
+  return (
+    <div className="border border-border rounded-lg p-4 space-y-2 bg-card/40">
+      <div className="font-medium">{title}</div>
+      <div className="text-muted-foreground">Usable rows: <span className="font-mono text-foreground">{rowsUsed}</span></div>
+      <div className="text-muted-foreground">R2: <span className="font-mono text-foreground">{r2 === null ? "n/a" : `${(r2 * 100).toFixed(1)}%`}</span></div>
+      <div className="text-muted-foreground">MAE: <span className="font-mono text-foreground">{maeValue === null ? "n/a" : maeValue.toFixed(2)}</span></div>
+      <div className="text-xs text-muted-foreground">{note}</div>
     </div>
   );
 }

@@ -153,7 +153,7 @@ This system is designed not only to demonstrate linear regression, but to prepar
 
 ## 5. Screenshots
 
-Add screenshots for:
+Recommended screenshots for final submission:
 
 1. Landing and visual intuition
 2. Dataset upload / messy data lab
@@ -165,7 +165,16 @@ Add screenshots for:
 8. Evaluation and K-fold screen
 9. Final cheatsheet
 
-## 6. Future Improvements
+## 6. Strength of the System
+
+This project goes beyond a normal regression demo in four ways:
+
+1. It teaches with a guided act-by-act flow instead of a single dashboard.
+2. It supports both clean and messy data learning situations.
+3. It connects intuition, math, and code in the same interface.
+4. It pushes learners toward independent reasoning through worksheet checks and consequence-based preprocessing feedback.
+
+## 7. Limitations and Future Improvements
 
 Planned next steps:
 
