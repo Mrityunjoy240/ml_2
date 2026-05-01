@@ -20,3 +20,14 @@ export const housePriceDataset = [
   { sqft: 2200, bedrooms: 4, price: 390000 },
   { sqft: 2600, bedrooms: 5, price: 450000 },
 ];
+
+export const messyHousePriceDataset = [
+  { sqft: 1400, bedrooms: 3, neighborhood: "North", has_garage: "yes", price: 245000 },
+  { sqft: 1600, bedrooms: "", neighborhood: "West", has_garage: "yes", price: 312000 },
+  { sqft: 1700, bedrooms: 2, neighborhood: "South", has_garage: "no", price: 279000 },
+  { sqft: "", bedrooms: 4, neighborhood: "North", has_garage: "yes", price: 308000 },
+  { sqft: 1100, bedrooms: 2, neighborhood: "East", has_garage: "no", price: 199000 },
+  { sqft: 1550, bedrooms: 3, neighborhood: "West", has_garage: "", price: 219000 },
+  { sqft: 2350, bedrooms: 4, neighborhood: "North", has_garage: "yes", price: 405000 },
+  { sqft: 2450, bedrooms: 4, neighborhood: "South", has_garage: "yes", price: 324000 },
+];

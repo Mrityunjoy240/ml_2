@@ -11,9 +11,11 @@ interface CheckpointQuizProps {
   options: { id: string; text: string }[];
   correctOptionId: string;
   nextRoute: string;
+  canAdvance?: boolean;
+  blockedMessage?: string;
 }
 
-export function CheckpointQuiz({ actNumber, question, options, correctOptionId, nextRoute }: CheckpointQuizProps) {
+export function CheckpointQuiz({ actNumber, question, options, correctOptionId, nextRoute, canAdvance = true, blockedMessage }: CheckpointQuizProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "correct" | "incorrect">("idle");
   const [, setLocation] = useLocation();
@@ -88,10 +90,13 @@ export function CheckpointQuiz({ actNumber, question, options, correctOptionId, 
                 <CheckCircle2 className="w-6 h-6" />
                 <span className="font-medium text-lg">Correct!</span>
               </div>
-              <Button onClick={handleNext} data-testid="btn-quiz-next">
+              <Button onClick={handleNext} data-testid="btn-quiz-next" disabled={!canAdvance}>
                 Advance to Act {actNumber + 1}
               </Button>
             </motion.div>
+          )}
+          {status === "correct" && !canAdvance && (
+            <div className="mt-3 text-sm text-amber-400">{blockedMessage ?? "Complete worksheet mastery before advancing."}</div>
           )}
           {status === "incorrect" && (
             <motion.div 

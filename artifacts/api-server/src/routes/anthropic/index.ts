@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { eq } from "drizzle-orm";
 import { db, conversations, messages } from "@workspace/db";
-import { anthropic } from "@workspace/integrations-anthropic-ai";
 import {
   CreateAnthropicConversationBody,
   GetAnthropicConversationParams,
@@ -12,6 +11,9 @@ import {
 } from "@workspace/api-zod";
 
 const router = Router();
+const groqApiKey = process.env.GROQ_API_KEY;
+const groqBaseUrl = process.env.GROQ_BASE_URL ?? "https://api.groq.com/openai/v1";
+const groqModel = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
 
 router.get("/conversations", async (req, res) => {
   const convs = await db.select().from(conversations).orderBy(conversations.createdAt);
@@ -118,7 +120,7 @@ router.post("/conversations/:id/messages", async (req, res) => {
     .where(eq(messages.conversationId, conversationId))
     .orderBy(messages.createdAt);
 
-  const chatMessages = existingMessages.map((m) => ({
+  const chatMessages = existingMessages.map((m: typeof existingMessages[number]) => ({
     role: m.role as "user" | "assistant",
     content: m.content,
   }));
@@ -130,20 +132,63 @@ router.post("/conversations/:id/messages", async (req, res) => {
   let fullResponse = "";
 
   try {
-    const stream = anthropic.messages.stream({
-      model: "claude-sonnet-4-6",
-      max_tokens: 8192,
-      system: systemPrompt ?? "You are a helpful tutor. Answer in exactly 3 sentences.",
-      messages: chatMessages,
+    if (!groqApiKey) {
+      throw new Error("GROQ_API_KEY is not configured");
+    }
+
+    const response = await fetch(`${groqBaseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${groqApiKey}`,
+      },
+      body: JSON.stringify({
+        model: groqModel,
+        stream: true,
+        temperature: 0.2,
+        max_tokens: 512,
+        messages: [
+          {
+            role: "system",
+            content:
+              systemPrompt ??
+              "You are a helpful linear regression tutor. Stay on the current lesson, answer in exactly 3 short sentences, and redirect out-of-scope questions back to the lesson.",
+          },
+          ...chatMessages,
+        ],
+      }),
     });
 
-    for await (const event of stream) {
-      if (
-        event.type === "content_block_delta" &&
-        event.delta.type === "text_delta"
-      ) {
-        fullResponse += event.delta.text;
-        res.write(`data: ${JSON.stringify({ content: event.delta.text })}\n\n`);
+    if (!response.ok || !response.body) {
+      throw new Error(`Groq request failed with status ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line.startsWith("data:")) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+
+        const parsed = JSON.parse(payload) as {
+          choices?: Array<{ delta?: { content?: string } }>;
+        };
+        const token = parsed.choices?.[0]?.delta?.content;
+        if (!token) continue;
+
+        fullResponse += token;
+        res.write(`data: ${JSON.stringify({ content: token })}\n\n`);
       }
     }
 

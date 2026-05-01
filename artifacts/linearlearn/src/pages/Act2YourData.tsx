@@ -1,26 +1,63 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAppState } from "@/context/AppState";
 import { DoubtSystem } from "@/components/DoubtSystem";
 import { CheckpointQuiz } from "@/components/CheckpointQuiz";
-import { housePriceDataset } from "@/lib/dataset";
+import { housePriceDataset, messyHousePriceDataset } from "@/lib/dataset";
 import Papa from "papaparse";
-import { UploadCloud, FileType2, ChevronRight, CheckCircle2 } from "lucide-react";
+import { UploadCloud, FileType2, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  applyEncoding,
+  applyMissingValueHandling,
+  applyScaling,
+  assessPreprocessingChoices,
+  countMissingValues,
+  inferColumnType,
+  type EncodingStrategy,
+  type MissingStrategy,
+  type ScalingStrategy,
+} from "@/lib/preprocessing";
 
 export default function Act2YourData() {
   const { dataset, setDataset, targetColumn, setTargetColumn, featureColumns, setFeatureColumns } = useAppState();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [uploading, setUploading] = useState(false);
+  const [rawDataset, setRawDataset] = useState<any[]>([]);
+  const [missingStrategy, setMissingStrategy] = useState<MissingStrategy>("none");
+  const [encodingStrategy, setEncodingStrategy] = useState<EncodingStrategy>("none");
+  const [scalingStrategy, setScalingStrategy] = useState<ScalingStrategy>("none");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [datasetPersistenceLimited, setDatasetPersistenceLimited] = useState(false);
+  const [dataMode, setDataMode] = useState<"sample" | "messy" | "upload">("sample");
+
+  useEffect(() => {
+    try {
+      setDatasetPersistenceLimited(localStorage.getItem("ll_dataset_truncated") === "1");
+    } catch {
+      setDatasetPersistenceLimited(false);
+    }
+  }, [dataset.length]);
 
   // Default setup
   const useSampleDataset = () => {
+    setDataMode("sample");
+    setRawDataset(housePriceDataset as any);
     setDataset(housePriceDataset as any);
     setTargetColumn("price");
     setFeatureColumns(["sqft"]);
+    setStep(2);
+  };
+
+  const useMessyDataset = () => {
+    setDataMode("messy");
+    setRawDataset(messyHousePriceDataset as any);
+    setDataset(messyHousePriceDataset as any);
+    setTargetColumn("price");
+    setFeatureColumns(["sqft", "bedrooms"]);
     setStep(2);
   };
 
@@ -29,12 +66,14 @@ export default function Act2YourData() {
     if (!file) return;
 
     setUploading(true);
+    setDataMode("upload");
     Papa.parse(file, {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true,
       complete: (results) => {
         setDataset(results.data as any);
+        setRawDataset(results.data as any);
         setUploading(false);
         setStep(2);
       },
@@ -46,11 +85,45 @@ export default function Act2YourData() {
   };
 
   const columns = dataset.length > 0 ? Object.keys(dataset[0]) : [];
+  const rawColumns = rawDataset.length > 0 ? Object.keys(rawDataset[0]) : [];
+  const activeRawDataset = rawDataset.length ? rawDataset : dataset;
+  const missingCount = columns.reduce((sum, col) => sum + countMissingValues(dataset, col), 0);
+  const messyHints = [
+    "Missing numeric values need a plan before training.",
+    "Categorical columns cannot be used directly in regression.",
+    "Some columns may be useful, but some may add noise.",
+  ];
+  const assessment = assessPreprocessingChoices(
+    activeRawDataset,
+    dataset,
+    missingStrategy,
+    encodingStrategy,
+    scalingStrategy,
+  );
+
+  const applyPreprocessing = () => {
+    let next = [...activeRawDataset];
+    next = applyMissingValueHandling(next, missingStrategy);
+    next = applyEncoding(next, encodingStrategy);
+    next = applyScaling(next, scalingStrategy);
+    setDataset(next as any);
+    const processedColumns = next.length > 0 ? Object.keys(next[0]) : [];
+    if (targetColumn && !processedColumns.includes(targetColumn)) setTargetColumn("");
+    if (featureColumns[0] && !processedColumns.includes(featureColumns[0])) setFeatureColumns([]);
+  };
 
   const handleNextStep3 = () => {
     if (targetColumn && featureColumns.length > 0) {
       setStep(3);
     }
+  };
+
+  const toggleFeature = (col: string) => {
+    setFeatureColumns(
+      featureColumns.includes(col)
+        ? featureColumns.filter((feature) => feature !== col)
+        : [...featureColumns, col],
+    );
   };
 
   return (
@@ -70,7 +143,7 @@ export default function Act2YourData() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="grid md:grid-cols-2 gap-8"
+            className="grid md:grid-cols-3 gap-8"
           >
             {/* Upload Zone */}
             <div 
@@ -100,6 +173,15 @@ export default function Act2YourData() {
               <p className="text-muted-foreground mb-6">King County House Prices</p>
               <Button onClick={useSampleDataset} data-testid="btn-use-sample">
                 Load Sample Data
+              </Button>
+            </div>
+
+            <div className="border border-border rounded-xl p-12 flex flex-col items-center justify-center text-center bg-card/50">
+              <FileType2 className="w-12 h-12 text-accent mb-4" />
+              <h3 className="text-xl font-medium mb-2">Messy Data Lab</h3>
+              <p className="text-muted-foreground mb-6">Nulls, categories, and uneven columns</p>
+              <Button onClick={useMessyDataset} variant="secondary" data-testid="btn-use-messy">
+                Load Messy Dataset
               </Button>
             </div>
           </motion.div>
@@ -143,20 +225,27 @@ export default function Act2YourData() {
                       <span className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs">X</span>
                       Feature Variable
                     </h4>
-                    <p className="text-sm text-muted-foreground mb-4">What is the main clue?</p>
-                    <Select 
-                      value={featureColumns[0] || ""} 
-                      onValueChange={(val) => setFeatureColumns([val])}
-                    >
-                      <SelectTrigger data-testid="select-feature">
-                        <SelectValue placeholder="Select column" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {columns.map(col => (
-                          <SelectItem key={col} value={col} disabled={col === targetColumn} data-testid={`option-feature-${col}`}>{col}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <p className="text-sm text-muted-foreground mb-4">Choose one clue for simple regression, or several for multiple regression.</p>
+                    <div className="flex flex-wrap gap-2">
+                      {columns.filter((col) => col !== targetColumn).map((col) => {
+                        const active = featureColumns.includes(col);
+                        return (
+                          <Button
+                            key={col}
+                            type="button"
+                            variant={active ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => toggleFeature(col)}
+                            data-testid={`toggle-feature-${col}`}
+                          >
+                            {col}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-3">
+                      Selected: {featureColumns.length ? featureColumns.join(", ") : "none"}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -171,6 +260,128 @@ export default function Act2YourData() {
                 >
                   Analyze Data <ChevronRight className="w-4 h-4" />
                 </Button>
+              </div>
+              <div className="mt-8 border-t border-border pt-6 space-y-5">
+                <h4 className="text-lg font-medium">Preprocessing Lab</h4>
+                <p className="text-sm text-muted-foreground">What & why: make data clean and numeric so the model can learn patterns reliably.</p>
+                {dataMode === "messy" && (
+                  <div className="border border-primary/20 bg-primary/5 rounded-lg p-4 space-y-2">
+                    <div className="text-sm font-medium text-primary">Messy Data Practice</div>
+                    {messyHints.map((hint) => (
+                      <div key={hint} className="text-sm text-muted-foreground">{hint}</div>
+                    ))}
+                  </div>
+                )}
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="border border-border rounded-lg p-4 bg-muted/20">
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground">Shape</div>
+                    <div className="mt-1 font-mono text-lg">{dataset.length} x {columns.length}</div>
+                  </div>
+                  <div className="border border-border rounded-lg p-4 bg-muted/20">
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground">Missing Cells</div>
+                    <div className="mt-1 font-mono text-lg">{missingCount}</div>
+                  </div>
+                  <div className="border border-border rounded-lg p-4 bg-muted/20">
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground">Selected Pipeline</div>
+                    <div className="mt-1 text-sm">{missingStrategy} / {encodingStrategy} / {scalingStrategy}</div>
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Select value={missingStrategy} onValueChange={(v) => setMissingStrategy(v as MissingStrategy)}>
+                    <SelectTrigger><SelectValue placeholder="Missing values" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Missing: None</SelectItem>
+                      <SelectItem value="mean">Missing: Mean Imputation</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={encodingStrategy} onValueChange={(v) => setEncodingStrategy(v as EncodingStrategy)}>
+                    <SelectTrigger><SelectValue placeholder="Encoding" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Encoding: None</SelectItem>
+                      <SelectItem value="label">Encoding: Label</SelectItem>
+                      <SelectItem value="onehot">Encoding: One-hot</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={scalingStrategy} onValueChange={(v) => setScalingStrategy(v as ScalingStrategy)}>
+                    <SelectTrigger><SelectValue placeholder="Scaling" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Scaling: None</SelectItem>
+                      <SelectItem value="standardize">Scaling: Standardization</SelectItem>
+                      <SelectItem value="normalize">Scaling: Normalization</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button variant="secondary" onClick={applyPreprocessing}>Apply Preprocessing</Button>
+                <div className="text-xs text-muted-foreground">Before columns: {rawColumns.join(", ") || "none"} | After columns: {columns.join(", ") || "none"}</div>
+                {datasetPersistenceLimited && (
+                  <div className="border border-accent/30 bg-accent/10 text-accent rounded-lg px-4 py-3 text-sm">
+                    Large datasets are loaded normally, but only the first 250 rows are saved for refresh/revisit state.
+                  </div>
+                )}
+                <div className="border border-border rounded-lg p-5 space-y-4 bg-muted/10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium">Model Readiness</div>
+                      <div className="text-xs text-muted-foreground">How safe is this current preprocessing path for a beginner workflow?</div>
+                    </div>
+                    <div className="text-2xl font-mono text-primary">{assessment.readinessScore}%</div>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-2">
+                      <div className="font-medium text-primary">What is helping</div>
+                      {assessment.strengths.map((item) => (
+                        <div key={item} className="text-muted-foreground">{item}</div>
+                      ))}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="font-medium text-accent">Likely beginner mistakes</div>
+                      {assessment.issues.map((item) => (
+                        <div key={item} className="text-muted-foreground">{item}</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="overflow-x-auto border border-border rounded-lg">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/20 text-muted-foreground">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Column</th>
+                        <th className="px-4 py-2 text-left">Type</th>
+                        <th className="px-4 py-2 text-left">Missing</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {columns.map((col) => (
+                        <tr key={col} className="border-t border-border/60">
+                          <td className="px-4 py-2 font-mono">{col}</td>
+                          <td className="px-4 py-2">{inferColumnType(dataset, col)}</td>
+                          <td className="px-4 py-2 font-mono">{countMissingValues(dataset, col)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Tabs defaultValue="tables" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="tables">Before / After</TabsTrigger>
+                    <TabsTrigger value="code">Code Mirror</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="tables" className="mt-4">
+                    <div className="grid lg:grid-cols-2 gap-4">
+                      <DataPreviewTable title="Before preprocessing" data={activeRawDataset} columns={rawColumns} />
+                      <DataPreviewTable title="After preprocessing" data={dataset} columns={columns} />
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="code" className="mt-4">
+                    <CodeMirrorPanel
+                      targetColumn={targetColumn}
+                      featureColumns={featureColumns}
+                      missingStrategy={missingStrategy}
+                      encodingStrategy={encodingStrategy}
+                      scalingStrategy={scalingStrategy}
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           </motion.div>
@@ -211,7 +422,7 @@ export default function Act2YourData() {
                 className="bg-card border border-border p-6 rounded-xl flex flex-col items-center justify-center text-center"
               >
                 <div className="flex gap-2 mb-2">
-                  <Badge variant="outline" className="text-primary border-primary/30">1 Feature</Badge>
+                  <Badge variant="outline" className="text-primary border-primary/30">{featureColumns.length} Feature{featureColumns.length === 1 ? "" : "s"}</Badge>
                   <Badge variant="outline" className="text-accent border-accent/30">1 Target</Badge>
                 </div>
                 <div className="text-sm text-muted-foreground uppercase tracking-wider">Shape</div>
@@ -279,6 +490,100 @@ export default function Act2YourData() {
         }}
         soWhat="Without cleanly defining what we know (X) and what we want to find out (Y), the algorithm doesn't know what problem to solve."
       />
+    </div>
+  );
+}
+
+function CodeMirrorPanel({
+  targetColumn,
+  featureColumns,
+  missingStrategy,
+  encodingStrategy,
+  scalingStrategy,
+}: {
+  targetColumn: string;
+  featureColumns: string[];
+  missingStrategy: MissingStrategy;
+  encodingStrategy: EncodingStrategy;
+  scalingStrategy: ScalingStrategy;
+}) {
+  const featureList = featureColumns.length ? featureColumns.map((col) => `"${col}"`).join(", ") : `"sqft"`;
+  const target = targetColumn || "price";
+  const missingLine =
+    missingStrategy === "mean"
+      ? `df = df.fillna(df.mean(numeric_only=True))`
+      : `# keep missing values unchanged for now`;
+  const encodingLine =
+    encodingStrategy === "label"
+      ? `# label encoding would convert text categories into integer ids`
+      : encodingStrategy === "onehot"
+        ? `df = pd.get_dummies(df, drop_first=False)`
+        : `# no categorical encoding applied`;
+  const scalingLine =
+    scalingStrategy === "standardize"
+      ? `X = (X - X.mean()) / X.std(ddof=0)`
+      : scalingStrategy === "normalize"
+        ? `X = (X - X.min()) / (X.max() - X.min())`
+        : `# no feature scaling applied`;
+
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <div className="px-4 py-2 bg-muted/20 text-sm font-medium">Python equivalent of this step</div>
+      <pre className="p-4 text-xs md:text-sm overflow-x-auto font-mono leading-6 bg-card">
+{`import pandas as pd
+from sklearn.model_selection import train_test_split
+
+df = pd.read_csv("your_dataset.csv")
+print(df.head())
+print(df.isnull().sum())
+
+${missingLine}
+${encodingLine}
+
+X = df[[${featureList}]]
+y = df["${target}"]
+
+${scalingLine}
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)`}
+      </pre>
+    </div>
+  );
+}
+
+function formatCell(value: unknown) {
+  if (typeof value === "number") return Number.isInteger(value) ? value : value.toFixed(3);
+  if (value === null || value === undefined || value === "") return "missing";
+  return String(value);
+}
+
+function DataPreviewTable({ title, data, columns }: { title: string; data: any[]; columns: string[] }) {
+  const shownColumns = columns.slice(0, 5);
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <div className="px-4 py-2 bg-muted/20 text-sm font-medium">{title}</div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead className="text-muted-foreground">
+            <tr>
+              {shownColumns.map((col) => (
+                <th key={col} className="px-3 py-2 text-left font-medium">{col}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.slice(0, 5).map((row, i) => (
+              <tr key={i} className="border-t border-border/60">
+                {shownColumns.map((col) => (
+                  <td key={col} className="px-3 py-2 font-mono whitespace-nowrap">{formatCell(row[col])}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

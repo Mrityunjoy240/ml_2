@@ -9,6 +9,7 @@ interface WorksheetEngineProps {
   dataset: DataRow[];
   feature: string;
   target: string;
+  onScore?: (score: number) => void;
 }
 
 function isClose(user: number, expected: number, tolerance = 0.02) {
@@ -17,7 +18,7 @@ function isClose(user: number, expected: number, tolerance = 0.02) {
   return rel <= tolerance;
 }
 
-export function WorksheetEngine({ dataset, feature, target }: WorksheetEngineProps) {
+export function WorksheetEngine({ dataset, feature, target, onScore }: WorksheetEngineProps) {
   const rows = useMemo(() => (dataset.length ? dataset.slice(0, 3) : [
     { [feature]: 1000, [target]: 210000 },
     { [feature]: 1500, [target]: 275000 },
@@ -66,7 +67,7 @@ export function WorksheetEngine({ dataset, feature, target }: WorksheetEnginePro
         <Input className="md:col-span-2" placeholder={`Prediction at x=${xNew}`} value={ansPred} onChange={(e) => setAnsPred(e.target.value)} />
       </div>
       <div className="flex gap-3">
-        <Button onClick={() => setChecked(true)}>Check My Work</Button>
+        <Button onClick={() => { setChecked(true); onScore?.(score); }}>Check My Work</Button>
       </div>
       {checked && (
         <div className="space-y-1 text-sm">
@@ -81,4 +82,3 @@ export function WorksheetEngine({ dataset, feature, target }: WorksheetEnginePro
     </div>
   );
 }
-

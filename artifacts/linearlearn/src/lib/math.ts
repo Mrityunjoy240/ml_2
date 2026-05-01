@@ -43,13 +43,10 @@ export function pearsonCorrelation(x: number[], y: number[]): number {
 }
 
 export function normalEquation(X: number[][], y: number[]): number[] {
-  // Simple 1D linear regression for now, returning [b0, b1]
-  // Assuming X is a 2D array where each row is [1, x_val] or just [x_val]
-  // If we assume a single feature:
   if (X.length === 0 || y.length === 0) return [0, 0];
+  if (X[0]?.length > 1) return normalEquationMulti(X, y);
   
-  // Flatten X assuming single feature for simple linear regression
-  const xVals = X.map(row => row.length > 1 ? row[1] : row[0]);
+  const xVals = X.map(row => row[0]);
   
   const xMean = mean(xVals);
   const yMean = mean(y);
@@ -67,6 +64,57 @@ export function normalEquation(X: number[][], y: number[]): number[] {
   const b0 = yMean - b1 * xMean;
   
   return [b0, b1];
+}
+
+function transpose(matrix: number[][]): number[][] {
+  return matrix[0].map((_, col) => matrix.map((row) => row[col]));
+}
+
+function multiply(a: number[][], b: number[][]): number[][] {
+  return a.map((row) =>
+    b[0].map((_, j) => row.reduce((sum, value, i) => sum + value * b[i][j], 0)),
+  );
+}
+
+function invert(matrix: number[][]): number[][] | null {
+  const n = matrix.length;
+  const augmented = matrix.map((row, i) => [
+    ...row,
+    ...Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)),
+  ]);
+
+  for (let i = 0; i < n; i++) {
+    let pivot = augmented[i][i];
+    if (Math.abs(pivot) < 1e-12) {
+      const swap = augmented.findIndex((row, r) => r > i && Math.abs(row[i]) > 1e-12);
+      if (swap === -1) return null;
+      [augmented[i], augmented[swap]] = [augmented[swap], augmented[i]];
+      pivot = augmented[i][i];
+    }
+    augmented[i] = augmented[i].map((value) => value / pivot);
+    for (let r = 0; r < n; r++) {
+      if (r === i) continue;
+      const factor = augmented[r][i];
+      augmented[r] = augmented[r].map((value, c) => value - factor * augmented[i][c]);
+    }
+  }
+
+  return augmented.map((row) => row.slice(n));
+}
+
+export function normalEquationMulti(X: number[][], y: number[]): number[] {
+  if (X.length === 0 || X.length !== y.length) return [];
+  const design = X.map((row) => [1, ...row]);
+  const xT = transpose(design);
+  const xTx = multiply(xT, design);
+  const inverse = invert(xTx);
+  if (!inverse) return Array.from({ length: X[0].length + 1 }, () => 0);
+  const yCol = y.map((value) => [value]);
+  return multiply(multiply(inverse, xT), yCol).map((row) => row[0]);
+}
+
+export function predictRow(coefficients: number[], features: number[]): number {
+  return coefficients[0] + features.reduce((sum, value, i) => sum + value * (coefficients[i + 1] ?? 0), 0);
 }
 
 export function gradientDescent(
@@ -187,7 +235,7 @@ export function kFoldCV(X: number[][], y: number[], k: number): number[] {
     
     const coeffs = normalEquation(XTrain, yTrain);
     
-    const predictions = XTest.map(row => coeffs[0] + coeffs[1] * (row.length > 1 ? row[1] : row[0]));
+    const predictions = XTest.map(row => predictRow(coeffs, row));
     rSquaredValues.push(rSquared(yTest, predictions));
   }
   

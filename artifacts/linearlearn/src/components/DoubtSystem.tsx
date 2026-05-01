@@ -138,7 +138,7 @@ function AIChat({ actNumber, screenTitle, currentConcept }: { actNumber: number;
       });
       const conversation = await convRes.json() as { id: number };
 
-      const systemPrompt = `You are a patient tutor helping a student understand "${currentConcept}". Current screen: ${screenTitle}. Answer in exactly 3 sentences. Do not do homework. Focus only on conceptual understanding. The student's model: ${JSON.stringify(model)}`;
+      const systemPrompt = `You are a patient linear regression tutor helping a beginner understand "${currentConcept}" on the "${screenTitle}" screen. Answer in exactly 3 short sentences. Stay strictly inside the current lesson context: explain the concept, connect it to the student's current screen, and keep the focus on conceptual understanding, not homework completion. If the student's question is outside this lesson, briefly redirect them back to "${currentConcept}" and answer only the closest in-scope part. The student's current model is ${JSON.stringify(model)}.`;
 
       const res = await fetch(`/api/anthropic/conversations/${conversation.id}/messages`, {
         method: "POST",
