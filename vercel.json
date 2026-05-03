@@ -3,6 +3,11 @@
   "installCommand": "pnpm install",
   "buildCommand": "pnpm --filter @workspace/linearlearn build",
   "outputDirectory": "artifacts/linearlearn/dist/public",
+  "functions": {
+    "api/index.ts": {
+      "runtime": "vercel-node@latest"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
