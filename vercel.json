@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
   "installCommand": "pnpm install",
   "buildCommand": "pnpm --filter @workspace/linearlearn build",
   "outputDirectory": "artifacts/linearlearn/dist/public",
@@ -11,7 +10,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/artifacts/linearlearn/dist/public/index.html"
+      "destination": "/index.html"
     }
   ]
 }
