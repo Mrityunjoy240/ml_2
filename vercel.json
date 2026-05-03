@@ -1,13 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm --filter @workspace/linearlearn build",
-  "outputDirectory": "artifacts/linearlearn/dist/public",
-  "functions": {
-    "api/index.ts": {
-      "runtime": "vercel-node@latest"
-    }
-  },
+  "buildCommand": "pnpm --filter @workspace/linearlearn build && rm -rf public && mv artifacts/linearlearn/dist/public public",
   "rewrites": [
     {
       "source": "/api/(.*)",
