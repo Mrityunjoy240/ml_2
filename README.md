@@ -32,13 +32,13 @@ LinearLearn is an interactive web-based learning system for Linear Regression ai
 
 ```powershell
 pnpm install
-npm run dev
+pnpm run dev
 ```
 
 ## Full stack run
 
 ```powershell
-npm run dev:full
+pnpm run dev:full
 ```
 
 ## Build

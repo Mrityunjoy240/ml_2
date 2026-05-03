@@ -172,18 +172,14 @@ function CatchMeUpButton() {
     setLoading(true);
     const completedNames = [...completedActs].sort().map((n) => ACT_NAMES[n]).filter(Boolean);
     try {
-      const convRes = await fetch("/api/anthropic/conversations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "Catch me up summary" }),
-      });
-      const conversation = await convRes.json() as { id: number };
-
-      const res = await fetch(`/api/anthropic/conversations/${conversation.id}/messages`, {
+      const res = await fetch(`/api/tutor/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          content: `The student has completed these acts: ${completedNames.join("; ")}. Summarize what they have learned in exactly 60 words. Use plain English. Be encouraging.`,
+          messages: [{
+            role: "user",
+            content: `The student has completed these acts: ${completedNames.join("; ")}. Summarize what they have learned in exactly 60 words. Use plain English. Be encouraging.`
+          }],
           systemPrompt: "You are a friendly tutor summarizing a student's learning progress. Keep your response to exactly 60 words. Focus on what they understand now.",
         }),
       });

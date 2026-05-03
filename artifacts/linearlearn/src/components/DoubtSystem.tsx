@@ -131,19 +131,12 @@ function AIChat({ actNumber, screenTitle, currentConcept }: { actNumber: number;
     setLoading(true);
 
     try {
-      const convRes = await fetch("/api/anthropic/conversations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: `Act ${actNumber} - ${screenTitle}` }),
-      });
-      const conversation = await convRes.json() as { id: number };
-
       const systemPrompt = `You are a patient linear regression tutor helping a beginner understand "${currentConcept}" on the "${screenTitle}" screen. Answer in exactly 3 short sentences. Stay strictly inside the current lesson context: explain the concept, connect it to the student's current screen, and keep the focus on conceptual understanding, not homework completion. If the student's question is outside this lesson, briefly redirect them back to "${currentConcept}" and answer only the closest in-scope part. The student's current model is ${JSON.stringify(model)}.`;
 
-      const res = await fetch(`/api/anthropic/conversations/${conversation.id}/messages`, {
+      const res = await fetch(`/api/tutor/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: userMsg.content, systemPrompt }),
+        body: JSON.stringify({ messages: [...messages, userMsg], systemPrompt }),
       });
 
       if (!res.body) throw new Error("No response body");
