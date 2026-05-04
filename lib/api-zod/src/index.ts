@@ -1,4 +1,4 @@
-export * from "./generated/api";
+export * from "./generated/api.js";
 export type {
   HealthStatus,
   AnthropicConversation,
@@ -6,4 +6,4 @@ export type {
   AnthropicError,
   AnthropicMessage,
   CreateAnthropicConversationBody,
-} from "./generated/types";
+} from "./generated/types/index.js";

@@ -146,6 +146,7 @@ function GlossaryPanel() {
 }
 
 function CatchMeUpButton() {
+  const [location] = useLocation();
   const { completedActs } = useAppState();
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
@@ -164,13 +165,25 @@ function CatchMeUpButton() {
 
   const handleOpen = async () => {
     setOpen(true);
-    if (completedActs.size === 0) {
-      setSummary("You haven't completed any acts yet. Start at Act 1 to begin your journey.");
+    const currentActId = parseInt(location.split("/").pop() || "0");
+    const completedIds = Array.from(completedActs);
+    
+    if (completedIds.length === 0 && (isNaN(currentActId) || currentActId === 0)) {
+      setSummary("You haven't started your journey yet! Click 'Begin the Journey' to start learning about Linear Regression.");
       return;
     }
+
     setSummary("");
     setLoading(true);
-    const completedNames = [...completedActs].sort().map((n) => ACT_NAMES[n]).filter(Boolean);
+
+    const completedNames = completedIds.sort().map((n) => ACT_NAMES[n]).filter(Boolean);
+    const currentActName = ACT_NAMES[currentActId];
+    
+    const contextStr = completedNames.length > 0 
+      ? `The student has completed: ${completedNames.join("; ")}.`
+      : "";
+    const currentStr = currentActName ? `They are currently learning about: ${currentActName}.` : "";
+
     try {
       const res = await fetch(`/api/tutor/chat`, {
         method: "POST",
@@ -178,9 +191,9 @@ function CatchMeUpButton() {
         body: JSON.stringify({
           messages: [{
             role: "user",
-            content: `The student has completed these acts: ${completedNames.join("; ")}. Summarize what they have learned in exactly 60 words. Use plain English. Be encouraging.`
+            content: `${contextStr} ${currentStr} Summarize their journey so far and explain how their current step fits into the big picture of Linear Regression. exactly 60 words. Be encouraging.`
           }],
-          systemPrompt: "You are a friendly tutor summarizing a student's learning progress. Keep your response to exactly 60 words. Focus on what they understand now.",
+          systemPrompt: "You are a friendly tutor summarizing a student's learning progress. Keep your response to exactly 60 words. Focus on the narrative of the journey.",
         }),
       });
 
@@ -197,10 +210,15 @@ function CatchMeUpButton() {
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
         for (const line of lines) {
-          if (!line.trim().startsWith("data: ")) continue;
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data: ")) continue;
           try {
-            const data = JSON.parse(line.trim().slice(6)) as { content?: string; done?: boolean };
+            const data = JSON.parse(trimmed.slice(6)) as { content?: string; done?: boolean; error?: string };
             if (data.done) break;
+            if (data.error) {
+               setSummary(data.error);
+               break;
+            }
             if (data.content) setSummary((prev) => prev + data.content);
           } catch {
             // skip

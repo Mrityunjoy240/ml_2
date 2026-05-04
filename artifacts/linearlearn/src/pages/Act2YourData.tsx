@@ -117,6 +117,9 @@ export default function Act2YourData() {
   const handleNextStep3 = () => {
     if (targetColumn && featureColumns.length > 0) {
       setStep(3);
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      }, 100);
     }
   };
 

@@ -21,29 +21,34 @@ import {
 export default function Act3ReadingClues() {
   const { dataset, targetColumn, featureColumns, addGlossaryTerm } = useAppState();
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [selectedFeature, setSelectedFeature] = useState(featureColumns[0] || "");
   const [userLine, setUserLine] = useState<{ start: { x: number, y: number }, end: { x: number, y: number } } | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [showActualLine, setShowActualLine] = useState(false);
   const drawAreaRef = useRef<HTMLDivElement>(null);
 
-  // Default to first feature
-  const feature = featureColumns[0] || "sqft";
+  // Default to first feature if none selected
+  const feature = selectedFeature || featureColumns[0] || "sqft";
   const target = targetColumn || "price";
 
   if (!dataset.length || !feature || !target) {
     return <div className="p-8 text-center text-muted-foreground">Please complete Act 2 to load data.</div>;
   }
 
-  // Pre-compute values
+  // Pre-compute values for the selected feature
   const featureVals = dataset.map(r => Number(r[feature]));
   const targetVals = dataset.map(r => Number(r[target]));
   
   const fMin = min(featureVals);
   const fMax = max(featureVals);
-  const tMin = min(targetVals);
-  const tMax = max(targetVals);
   
   const pearson = pearsonCorrelation(featureVals, targetVals);
+
+  // Compute correlations for all features
+  const allCorrelations = featureColumns.map(col => ({
+    name: col,
+    r: pearsonCorrelation(dataset.map(r => Number(r[col])), targetVals)
+  }));
 
   // Histogram data
   const bins = 10;
@@ -99,6 +104,26 @@ export default function Act3ReadingClues() {
         <Button variant={step === 2 ? "default" : "outline"} onClick={() => setStep(2)}>2. Trend</Button>
         <Button variant={step === 3 ? "default" : "outline"} onClick={() => setStep(3)}>3. Strength</Button>
       </div>
+
+      {featureColumns.length > 1 && (
+        <div className="flex flex-wrap gap-2 items-center bg-muted/20 p-3 rounded-lg border border-border">
+          <span className="text-sm text-muted-foreground mr-2">Focus on:</span>
+          {featureColumns.map(col => (
+            <Button 
+              key={col} 
+              variant={feature === col ? "secondary" : "ghost"} 
+              size="sm"
+              onClick={() => {
+                setSelectedFeature(col);
+                setUserLine(null);
+                setShowActualLine(false);
+              }}
+            >
+              {col}
+            </Button>
+          ))}
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         {step === 1 && (
@@ -227,9 +252,25 @@ export default function Act3ReadingClues() {
                   />
                 </div>
                 <div className="text-center text-2xl font-mono mt-4">
-                  r = {pearson.toFixed(3)}
+                  r({feature}, {target}) = {pearson.toFixed(3)}
                 </div>
               </div>
+
+              {featureColumns.length > 1 && (
+                <div className="space-y-6 pt-6 border-t border-border">
+                  <h4 className="text-xl font-medium">All Clues Correlation</h4>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {allCorrelations.map(corr => (
+                      <div key={corr.name} className="bg-muted/30 p-4 rounded-lg border border-border flex justify-between items-center">
+                        <span className="font-medium text-sm">{corr.name}</span>
+                        <span className={`font-mono font-bold ${Math.abs(corr.r) > 0.5 ? 'text-primary' : 'text-muted-foreground'}`}>
+                          {corr.r.toFixed(3)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>

@@ -1,5 +1,6 @@
-import app from "./app";
-import { logger } from "./lib/logger";
+import "dotenv/config";
+import app from "./app.js";
+import { logger } from "./lib/logger.js";
 
 const rawPort = process.env["PORT"];
 const port = Number(rawPort ?? "3001");

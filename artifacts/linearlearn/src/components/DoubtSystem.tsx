@@ -164,7 +164,7 @@ function AIChat({ actNumber, screenTitle, currentConcept }: { actNumber: number;
             if (data.error) {
               setMessages((prev) => {
                 const updated = [...prev];
-                updated[updated.length - 1] = { role: "assistant", content: "Sorry, something went wrong." };
+                updated[updated.length - 1] = { role: "assistant", content: data.error || "Sorry, something went wrong." };
                 return updated;
               });
               break;

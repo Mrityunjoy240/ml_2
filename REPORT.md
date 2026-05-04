@@ -79,10 +79,10 @@ Implemented:
 
 Implemented:
 
-1. Histograms
-2. Scatter plots
-3. Correlation analysis
-4. Feature-target relationship visualization
+1. Histograms for all selected features
+2. Scatter plots for all selected features
+3. Comprehensive correlation analysis for all clues
+4. Feature-target relationship visualization with interactive line drawing
 
 ### Linear Regression Learning Module
 
@@ -109,9 +109,10 @@ Implemented:
 Implemented:
 
 1. Regression line for single feature
-2. Learned coefficients and intercept
-3. Loss convergence view
-4. Multi-feature coefficient display
+2. Component-wise impact charts for multiple features
+3. Learned coefficients and intercept
+4. Loss convergence view
+5. Multi-feature coefficient display
 
 ### Prediction and Inference
 

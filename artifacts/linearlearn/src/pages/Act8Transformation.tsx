@@ -15,15 +15,16 @@ import {
 } from "recharts";
 
 export default function Act8Transformation() {
-  const { model, featureColumns, targetColumn, glossary } = useAppState();
+  const { dataset, model, featureColumns, targetColumn, glossary } = useAppState();
   const [showLabels, setShowLabels] = useState(false);
   const [showChecklist, setShowChecklist] = useState(false);
 
-  const initialPoints = housePriceDataset.slice(0, 5);
-  const chartData = initialPoints.map((p) => ({ x: p.sqft, y: p.price }));
   const feature = featureColumns[0] || "sqft";
   const target = targetColumn || "price";
   const features = featureColumns.length ? featureColumns : [feature];
+
+  const initialPoints = (dataset.length > 0 ? dataset : housePriceDataset).slice(0, 5);
+  const chartData = initialPoints.map((p) => ({ x: Number(p[feature]), y: Number(p[target]) }));
 
   useEffect(() => {
     const timer1 = setTimeout(() => setShowLabels(true), 2000);
@@ -72,9 +73,9 @@ export default function Act8Transformation() {
           <ResponsiveContainer width="100%" height="100%">
             <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-              <XAxis dataKey="x" type="number" domain={[1000, 3000]} tick={{ fill: "hsl(var(--muted-foreground))" }} stroke="hsl(var(--border))" />
-              <YAxis dataKey="y" type="number" domain={[150000, 500000]} tickFormatter={(val) => `$${val / 1000}k`} tick={{ fill: "hsl(var(--muted-foreground))" }} stroke="hsl(var(--border))" />
-              <Scatter name="Houses" data={chartData} fill="hsl(var(--primary))" />
+              <XAxis dataKey="x" type="number" domain={['auto', 'auto']} tick={{ fill: "hsl(var(--muted-foreground))" }} stroke="hsl(var(--border))" />
+              <YAxis dataKey="y" type="number" domain={['auto', 'auto']} tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`} tick={{ fill: "hsl(var(--muted-foreground))" }} stroke="hsl(var(--border))" />
+              <Scatter name="Data" data={chartData} fill="hsl(var(--primary))" />
             </ScatterChart>
           </ResponsiveContainer>
 

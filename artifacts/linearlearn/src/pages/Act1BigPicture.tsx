@@ -113,6 +113,13 @@ export default function Act1BigPicture() {
               >
                 <p className="font-medium text-lg">Your guess: ${guess.toLocaleString()}</p>
                 <p className="text-sm opacity-80 mt-1">We'll come back to this number at the end.</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4 w-full border-accent/30 hover:bg-accent/10" 
+                  onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })}
+                >
+                  See the Quiz Below
+                </Button>
               </motion.div>
             )}
           </div>

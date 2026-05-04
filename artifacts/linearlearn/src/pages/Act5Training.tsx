@@ -12,6 +12,11 @@ import {
   XAxis,
   YAxis,
   ResponsiveContainer,
+  ScatterChart,
+  Scatter,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ReferenceLine,
 } from "recharts";
 
 export default function Act5Training() {
@@ -205,6 +210,55 @@ export default function Act5Training() {
                 )}
               </AnimatePresence>
             </div>
+
+            {trained && features.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6 pt-8"
+              >
+                <div className="flex flex-col gap-2">
+                  <h4 className="text-2xl font-serif font-medium">Feature Impact</h4>
+                  <p className="text-muted-foreground">
+                    Each chart shows how one feature correlates with the target, with its part of the regression line.
+                  </p>
+                </div>
+                
+                <div className="grid gap-6 md:grid-cols-2">
+                  {features.map((col) => {
+                    const featVals = dataset.map(r => Number(r[col]));
+                    const tVals = dataset.map(r => Number(r[targetColumn] || 0));
+                    const scatterData = featVals.map((v, i) => ({ x: v, y: tVals[i] }));
+                    const fMin = Math.min(...featVals);
+                    const fMax = Math.max(...featVals);
+                    const b1 = model.coefficients[col] ?? 0;
+                    
+                    return (
+                      <div key={col} className="bg-card border border-border rounded-xl p-4 h-[300px] flex flex-col">
+                        <div className="text-sm font-medium mb-2 text-center text-muted-foreground uppercase tracking-wider">{col} Effect</div>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ScatterChart margin={{ top: 10, right: 10, bottom: 20, left: 10 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                            <XAxis dataKey="x" type="number" domain={['auto', 'auto']} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} stroke="hsl(var(--border))" />
+                            <YAxis dataKey="y" type="number" domain={['auto', 'auto']} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} stroke="hsl(var(--border))" />
+                            <RechartsTooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', fontSize: '12px' }} />
+                            <Scatter name={col} data={scatterData} fill="hsl(var(--primary))" opacity={0.4} />
+                            <ReferenceLine 
+                              stroke="hsl(var(--accent))" 
+                              strokeWidth={2} 
+                              segment={[
+                                { x: fMin, y: model.b0 + b1 * fMin },
+                                { x: fMax, y: model.b0 + b1 * fMax }
+                              ]} 
+                            />
+                          </ScatterChart>
+                        </ResponsiveContainer>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
 
             {trained && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

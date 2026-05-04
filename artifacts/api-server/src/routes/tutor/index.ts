@@ -5,7 +5,16 @@ const groqApiKey = process.env.GROQ_API_KEY;
 const groqBaseUrl = process.env.GROQ_BASE_URL ?? "https://api.groq.com/openai/v1";
 const groqModel = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
 
-router.post("/chat", async (req, res) => {
+router.get("/test", (_req: any, res: any) => {
+  res.json({ 
+    message: "Tutor API is reachable", 
+    groqKeyPresent: !!groqApiKey,
+    envPort: process.env.PORT,
+    nodeEnv: process.env.NODE_ENV
+  });
+});
+
+router.post("/chat", async (req: any, res: any) => {
   const { messages, systemPrompt } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
@@ -19,9 +28,14 @@ router.post("/chat", async (req, res) => {
 
   try {
     if (!groqApiKey) {
-      throw new Error("GROQ_API_KEY is not configured");
+      console.error("GROQ_API_KEY is missing in environment");
+      res.write(`data: ${JSON.stringify({ error: "API Key not configured. Please set GROQ_API_KEY in your Vercel Environment Variables." })}\n\n`);
+      res.end();
+      return;
     }
 
+    console.log(`Calling Groq API at ${groqBaseUrl}/chat/completions`);
+    
     const response = await fetch(`${groqBaseUrl}/chat/completions`, {
       method: "POST",
       headers: {
@@ -46,10 +60,12 @@ router.post("/chat", async (req, res) => {
           })),
         ],
       }),
-    });
+    }) as any;
 
     if (!response.ok || !response.body) {
-      throw new Error(`Groq request failed with status ${response.status}`);
+      const errorText = await response.text().catch(() => "Unknown error");
+      console.error(`Groq API error: ${response.status} - ${errorText}`);
+      throw new Error(`Groq request failed with status ${response.status}: ${errorText}`);
     }
 
     const reader = response.body.getReader();
@@ -70,21 +86,25 @@ router.post("/chat", async (req, res) => {
         const payload = line.slice(5).trim();
         if (!payload || payload === "[DONE]") continue;
 
-        const parsed = JSON.parse(payload) as {
-          choices?: Array<{ delta?: { content?: string } }>;
-        };
-        const token = parsed.choices?.[0]?.delta?.content;
-        if (!token) continue;
+        try {
+          const parsed = JSON.parse(payload) as {
+            choices?: Array<{ delta?: { content?: string } }>;
+          };
+          const token = parsed.choices?.[0]?.delta?.content;
+          if (!token) continue;
 
-        res.write(`data: ${JSON.stringify({ content: token })}\n\n`);
+          res.write(`data: ${JSON.stringify({ content: token })}\n\n`);
+        } catch (e) {
+          console.error("Error parsing Groq stream chunk:", e, payload);
+        }
       }
     }
 
     res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     res.end();
-  } catch (err) {
-    req.log.error({ err }, "AI streaming error");
-    res.write(`data: ${JSON.stringify({ error: "AI request failed" })}\n\n`);
+  } catch (err: any) {
+    console.error("AI streaming error:", err);
+    res.write(`data: ${JSON.stringify({ error: `AI request failed: ${err.message}` })}\n\n`);
     res.end();
   }
 });
